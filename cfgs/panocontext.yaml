@@ -21,7 +21,8 @@ MODEL:
       CUPDOWN: 0.96
 
 POST_PROCESS:
-  METHOD: "optimization" # 可选值：LayoutNetv2、geometry、optimization、None
+  # METHOD: "optimization" # 可选值：LayoutNetv2、geometry、optimization、None
+  METHOD: pred_only
   CPP: 0.0
   ZPP: 0.0
   ITER: 0

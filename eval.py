@@ -62,16 +62,22 @@ def valid(cfg, net, loader_valid, dataset_valid, device, visualize_count=0, show
                     print("{:s} pred{:s} gt{:s} {:s}".format(str(metric), str(pred_lwh), str(gt_lwh),
                                                              input["filename"][i]))
                 if SAVE_JSON or ("args" in globals() and args.print_json):
-                    (_, _, _), (_, _, pred_cors), metric = postResult
+                    (_, _, _), (_, pred_lwh, pred_cors), metric = postResult
+                    assert pred_cors is not None, "No predicted corners — use POST_PROCESS.METHOD = pred_only"
                     uv = pred_cors.cpu().numpy() / input["e_img"].shape[-1:-3:-1]
-                    uv = [[o.item() for o in pt] for pt in uv]
+                    uv = [[float(o) for o in pt] for pt in uv]
+                    out = {"uv": uv}
+                    if isinstance(metric, dict) and "3DIoU" in metric:
+                        out["3DIoU"] = metric["3DIoU"].item()
+                    if pred_lwh is not None:
+                        out["lwh"] = [float(v) for v in pred_lwh.cpu().numpy().reshape(-1)]
                     if SAVE_JSON:
                         JSON_DIR = "./result_json"
                         os.makedirs(JSON_DIR, exist_ok=True)
                         with open(os.path.join(JSON_DIR, input["filename"][i] + ".json"), "w") as f:
-                            json.dump({"uv": uv, "3DIoU": metric["3DIoU"].item()}, f)
+                            json.dump(out, f, indent=2)
                     elif "args" in globals() and args.print_json:
-                        print(json.dumps({"uv": uv, "3DIoU": metric["3DIoU"].item()}))
+                        print(json.dumps(out))
 
                 _, _, metric = postResult
                 for k, v in metric.items():

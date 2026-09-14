@@ -1,0 +1,10 @@
+checkpoints
+__pycache__
+ckpt/
+data/
+*.json
+*.png
+.venv/
+venv/
+unn_panorams/
+

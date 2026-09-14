@@ -208,7 +208,7 @@ def drawEqualRectCorners(cfg, ax, type, input, output, img_idx, gt_cor_id, pred_
     ax.imshow(e_img)
     if type.find("r") != -1:
         cor = gt_cor_id.cpu().numpy()
-        ax.scatter(cor[:, 0], cor[:, 1], c="red", s=10)
+        # ax.scatter(cor[:, 0], cor[:, 1], c="red", s=10)
         if pred_cor_id is not None:
             cor = pred_cor_id.cpu().numpy()
             ax.scatter(cor[:, 0], cor[:, 1], c="green", s=10)
@@ -226,7 +226,7 @@ def drawEqualRectCorners(cfg, ax, type, input, output, img_idx, gt_cor_id, pred_
         drawArray = cvtRGBMatToDrawingNdArray(emask)
         ax.imshow(drawArray)
     if type.find("w") != -1:
-        drawWireframeOnEImg(ax, e_img, gt_cor_id, (0.0, 1.0, 0.0))
+        # drawWireframeOnEImg(ax, e_img, gt_cor_id, (0.0, 1.0, 0.0))
         drawWireframeOnEImg(ax, e_img, pred_cor_id, (1.0, 0.0, 0.0))
 
 

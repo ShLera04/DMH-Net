@@ -722,6 +722,30 @@ def LayoutNetv2PostProcessWrapper(cfg, input, output, img_idx) -> Tuple[
 
     return (None, None, gt_cor_id), (None, None, pred_cor_id), metrics
 
+def predOnlyPostProcess(cfg, input, output, img_idx, camera_height=1.6, view_args=VIEW_ARGS,
+                        preset_dis_u=1.6):
+    with torch.no_grad():
+        img_hw = input["p_imgs"].shape[-2:]
+        e_img_hw = input["e_img"].shape[-2:]
+
+        pred_lines, pred_lwh, pred_extra = predProbMap_PretendDisUThenOptimIOU(
+            cfg, output, img_idx, img_hw, camera_height, view_args, preset_dis_u)
+        pred_lwh, _ = solveLwh(cfg, output, img_idx, pred_lwh, img_hw)
+        pred_peaks, pred_probs = extractPredPeaks(cfg, output, img_idx)
+        pred_lines = allLinesConvert(cfg, pred_peaks, img_hw, -pred_lwh[4], pred_lwh[5],
+                                     pred_lwh[[3, 1, 2, 0]], view_args, pred_probs)
+
+        corner_method = cfg.POST_PROCESS.get("CORNER_METHOD", "lwh")
+        if corner_method == "lwh":
+            pred_cor_id_np, z0, z1 = cvtPredLwhToEquirecCornerCoords(pred_lwh, e_img_hw)
+        elif corner_method == "emask":
+            pred_cor_id_np, z0, z1 = calPredCorIdByEMask(cfg, output["p_preds_emask"][img_idx])
+        else:
+            assert False
+        pred_cor_id = pred_lwh.new_tensor(pred_cor_id_np)
+
+        gt_cor_id = input["cor"][img_idx]
+        return (None, None, gt_cor_id), (pred_lines, pred_lwh, pred_cor_id), {}
 
 def postProcess(cfg, input, output, img_idx, is_valid_mode=False, camera_height=1.6, view_args=VIEW_ARGS,
                 preset_dis_u=1.6) -> Tuple[
@@ -734,6 +758,8 @@ def postProcess(cfg, input, output, img_idx, is_valid_mode=False, camera_height=
         else cfg.POST_PROCESS.METHOD_WHEN_VALID
     if method == "None" or method is None:
         return (None, None, input["cor"][img_idx]), (None, None, None), {}
+    elif method == "pred_only":
+        return predOnlyPostProcess(cfg, input, output, img_idx, camera_height, view_args, preset_dis_u)
     elif method == "geometry" or method == "optimization":
         return calMetrics_PretendDisUThenOptimIOU(cfg, input, output, img_idx, method == "optimization", camera_height,
                                                   view_args, preset_dis_u)

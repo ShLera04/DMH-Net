@@ -66,9 +66,21 @@ class PerspectiveDataset(data.Dataset):
         # 读取每个图片的点label数据，预保存在内存里从而进行二次过滤
         self.cors = []
         for filename in self.img_fnames:
-            with open(os.path.join(self.cor_dir, filename[:-4] + ".txt")) as f:
-                cor = np.array([line.strip().split() for line in f if line.strip()], np.float32)
-                self.cors.append(cor)
+            cor_path = os.path.join(self.cor_dir, filename[:-4] + ".txt")
+            if os.path.isfile(cor_path):
+                with open(cor_path) as f:
+                    cor = np.array([line.strip().split() for line in f if line.strip()], np.float32)
+            else:
+                # Нет GT-разметки (инференс на своей картинке) — заглушка:
+                # прямоугольная комната; 8 строк, чётные — потолок, нечётные — пол
+                cor = np.array([
+                    [x, y]
+                    for x in (0, self.W // 4, self.W // 2, 3 * self.W // 4)
+                    for y in (int(0.3 * self.H), int(0.7 * self.H))
+                ], np.float32)
+                warnings.warn("GT not found for %s, using dummy layout "
+                              "(metrics/losses will be meaningless)" % filename)
+            self.cors.append(cor)
 
         # 如果配置中对角点的个数有要求，执行过滤
         if cfg.DATA.get("USE_CORNER"):
