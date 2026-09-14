@@ -112,3 +112,4 @@
     .\venv\Scripts\python.exe layout_viewer.py --img "путь\к\оригинальной_панораме.jpg" --layout ".\result_json\pano.jpg.json"
     ```
     Флаги: --ignore_ceiling, --ignore_floor, --ignore_wireframe, --ppm 120.
+
