@@ -113,3 +113,17 @@
     ```
     Флаги: --ignore_ceiling, --ignore_floor, --ignore_wireframe, --ppm 120.
 
+* Быстрый инференс
+  ```powershell
+    $env:PYTHONUTF8 = "1"
+    .\venv\Scripts\python.exe inference_dmh_net.py --cfg cfgs/panocontext.yaml --pth ".\ckpt\panocontext_v1.pth" --img "путь\к\панораме.jpg" --output_dir results --no_cuda
+    ```
+    Параметры:
+
+    --cfg и --pth — ПАРНЫЕ конфиг и чекпоинт (panocontext/stanford/matterport);
+
+    --img — путь к панораме;
+
+    --output_dir — папка для JSON-результатов;
+
+    --no_cuda — для CPU-версии PyTorch.
