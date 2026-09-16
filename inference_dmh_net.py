@@ -3,7 +3,6 @@ import glob
 import json
 import os
 import shutil
-import sys
 import tempfile
 import warnings
 
@@ -29,7 +28,6 @@ def parse_args():
     parser.add_argument('--output_dir', default='results', help='where to save json results')
     parser.add_argument('--no_cuda', action='store_true', help='disable cuda')
     parser.add_argument('--no_rnn', action='store_true')
-    parser.add_argument('--num_workers', type=int, default=0)
     return parser.parse_args()
 
 
@@ -58,17 +56,17 @@ def main():
     try:
         paths = sorted(glob.glob(args.img))
         assert len(paths) > 0, 'no images found: %s' % args.img
-        names = []
         for p in paths:
             name = os.path.splitext(os.path.basename(p))[0] + '.png'
             img = Image.open(p).convert('RGB')
             if img.size != (1024, 512):
                 img = img.resize((1024, 512), Image.LANCZOS)
             img.save(os.path.join(img_out_dir, name))
-            names.append(name)
 
         cfg.DATA.ROOT_DIR = tmp_dir
         dataset = PerspectiveDataset(cfg, 'test')
+        assert len(dataset) > 0, ('no samples in dataset: check images and '
+                                  'PREFIX/USE_CORNER filters in %s' % args.cfg)
 
         net = DMHNet(cfg, cfg.MODEL.get('BACKBONE', {}).get('NAME', 'drn38'), not args.no_rnn).to(device)
         net = torch.nn.DataParallel(net)
